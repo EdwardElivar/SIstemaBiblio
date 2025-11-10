@@ -5,10 +5,33 @@ import base64
 import requests
 from openai import OpenAI # pyright: ignore[reportMissingImports]
 
-# Cliente OpenAI usando variable de entorno OPENAI_API_KEY
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+# Intentar leer la API key desde Streamlit Secrets o variables de entorno
+def get_openai_api_key():
+    # 1) Intentar desde st.secrets (solo disponible cuando corre en Streamlit)
+    try:
+        import streamlit as st
+        key = st.secrets.get("OPENAI_API_KEY", None)
+        if key:
+            return key
+    except Exception:
+        # Si no estamos en entorno Streamlit o no existe st.secrets, seguimos
+        pass
 
+    # 2) Intentar desde variable de entorno
+    key = os.getenv("OPENAI_API_KEY")
+    if key:
+        return key
+
+    # 3) Si no hay nada, error claro
+    raise ValueError(
+        "OPENAI_API_KEY no está configurada. "
+        "En local, exporta la variable de entorno OPENAI_API_KEY. "
+        "En Streamlit Cloud, configúrala en Settings -> Secrets."
+    )
+
+# Crear cliente global reutilizable
+OPENAI_API_KEY = get_openai_api_key()
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def limpiar_isbn(isbn: str) -> str:
     """Normaliza ISBN dejando solo dígitos y X; acepta 10 o 13 caracteres."""
