@@ -164,6 +164,8 @@ def identificar_libro_por_imagen(image_bytes):
             ],
             temperature=0,
         )
+    
+        print(resp)
 
         content = resp.choices[0].message.content or "{}"
         ia = json.loads(content)
